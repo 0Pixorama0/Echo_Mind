@@ -1,0 +1,23 @@
+name: echomind
+description: "EchoMind — a private AI journal with safe insights. Responsive Flutter app for iOS and Android."
+publish_to: "none"
+version: 0.1.0+1
+
+# Targets Flutter 3.27+ / Dart 3.6+ (uses Color.withValues and CardThemeData).
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  # Used for tap-to-call on the crisis help screen (iCall / Vandrevala).
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
