@@ -41,7 +41,7 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
     // → discard audio → keep text only (per SOW).
     setState(() => _recording = !_recording);
     if (!_recording) {
-      final stub =
+      const stub =
           'Spoke for a bit about a hectic day and feeling stretched thin.';
       final existing = _controller.text.trim();
       _controller.text = existing.isEmpty ? stub : '$existing\n$stub';

@@ -59,7 +59,7 @@ class PatternDashboardScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(
+                  const Expanded(
                     child: _StatCard(
                       label: 'Avg mood',
                       value: '2.9',

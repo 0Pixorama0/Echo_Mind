@@ -46,17 +46,17 @@ class CrisisHelpScreen extends StatelessWidget {
                   color: AppColors.crisis.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Row(
+                child: const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.favorite, color: AppColors.crisis),
-                    const SizedBox(width: 12),
+                    Icon(Icons.favorite, color: AppColors.crisis),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'If you\'re in distress or thinking about harming '
                         'yourself, you deserve support right now. These free, '
                         'confidential helplines are staffed by trained people.',
-                        style: const TextStyle(height: 1.45),
+                        style: TextStyle(height: 1.45),
                       ),
                     ),
                   ],
