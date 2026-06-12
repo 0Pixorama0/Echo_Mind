@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/api.dart';
 import '../../core/mock_data.dart';
 import '../../core/responsive.dart';
 import '../../widgets/crisis_help_button.dart';
@@ -17,6 +18,7 @@ class QueryScreen extends StatefulWidget {
 
 class _QueryScreenState extends State<QueryScreen> {
   final _controller = TextEditingController();
+  final _api = EchoMindApi();
   final _messages = <_Msg>[];
   bool _thinking = false;
 
@@ -29,6 +31,7 @@ class _QueryScreenState extends State<QueryScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    _api.dispose();
     super.dispose();
   }
 
@@ -40,12 +43,28 @@ class _QueryScreenState extends State<QueryScreen> {
       _controller.clear();
       _thinking = true;
     });
-    await Future<void>.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
-    setState(() {
-      _messages.add(_Msg(MockData.sampleAnswers['default']!, isUser: false));
-      _thinking = false;
-    });
+
+    try {
+      // In the real app the phone does the local vector match + retrieval and
+      // sends only the matched snippets. Here we pass the mock entries.
+      final answer = await _api.query(q, MockData.entries);
+      if (!mounted) return;
+      if (answer == null) {
+        openCrisisHelp(context); // backend flagged a crisis in the question
+        setState(() => _thinking = false);
+        return;
+      }
+      setState(() {
+        _messages.add(_Msg(answer, isUser: false));
+        _thinking = false;
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _messages.add(_Msg(MockData.sampleAnswers['default']!, isUser: false));
+        _thinking = false;
+      });
+    }
   }
 
   @override

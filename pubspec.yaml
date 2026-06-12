@@ -13,6 +13,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   # Used for tap-to-call on the crisis help screen (iCall / Vandrevala).
   url_launcher: ^6.3.0
+  # Talks to the EchoMind Node proxy (safety / reflection / query).
+  http: ^1.2.0
 
 dev_dependencies:
   flutter_test:

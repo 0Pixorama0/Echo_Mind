@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/api.dart';
 import '../../core/models.dart';
 import '../../core/responsive.dart';
 import '../../core/safety.dart';
@@ -21,12 +22,15 @@ class JournalEntryScreen extends StatefulWidget {
 class _JournalEntryScreenState extends State<JournalEntryScreen> {
   final _controller = TextEditingController();
   final _safety = const PlaceholderSafetyClassifier();
+  final _api = EchoMindApi();
   Mood? _mood;
   bool _recording = false;
+  bool _saving = false;
 
   @override
   void dispose() {
     _controller.dispose();
+    _api.dispose();
     super.dispose();
   }
 
@@ -50,21 +54,43 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
     }
   }
 
-  void _save() {
-    final level = _safety.classify(_controller.text);
-    if (level == SafetyLevel.l3Crisis) {
-      // Crisis indicators: disable normal flow, redirect to help.
+  Future<void> _save() async {
+    final text = _controller.text;
+
+    // Local backstop first — instant and offline-safe. Safety is always the
+    // FIRST step (SOW), even before we attempt the network.
+    if (_safety.classify(text) == SafetyLevel.l3Crisis) {
       openCrisisHelp(context);
       return;
     }
+
+    setState(() => _saving = true);
+    try {
+      final result = await _api.classify(text);
+      if (!mounted) return;
+      if (result.crisis) {
+        openCrisisHelp(context);
+        return;
+      }
+      _finishSave(level: result.level);
+    } on Object {
+      // Backend unreachable — proceed with the local (L1) result.
+      if (!mounted) return;
+      _finishSave(level: 'l1', offline: true);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _finishSave({required String level, bool offline = false}) {
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(level == SafetyLevel.l2Concerning
-            ? 'Saved. Support resources are available any time.'
-            : 'Entry saved.'),
-      ),
-    );
+    final msg = level == 'l2'
+        ? 'Saved. Support resources are available any time.'
+        : offline
+            ? 'Entry saved (offline).'
+            : 'Entry saved.';
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -80,8 +106,14 @@ class _JournalEntryScreenState extends State<JournalEntryScreen> {
         actions: [
           const CrisisHelpAction(),
           TextButton(
-            onPressed: _canSave ? _save : null,
-            child: const Text('Save'),
+            onPressed: (_canSave && !_saving) ? _save : null,
+            child: _saving
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Save'),
           ),
         ],
       ),

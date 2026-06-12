@@ -1,9 +1,10 @@
 # EchoMind (Flutter)
 
 A private AI journal with safe insights — responsive Flutter app for **iOS and
-Android**, adapting from small phones to tablets. This repo is the **UI scaffold**
-from the SOW: all core screens, responsive layout, and mock data. No backend,
-embeddings, or live Claude calls yet.
+Android**, adapting from small phones to tablets. All core screens, responsive
+layout, and mock data, now wired to the EchoMind Node proxy for safety,
+reflection, and query (with graceful fallback to local/mock when the backend
+isn't running).
 
 > EchoMind helps you reflect and notice patterns. It is **not** a therapist, a
 > medical tool, or a crisis service.
@@ -26,16 +27,35 @@ flutter run -d ios         # macOS only
 flutter run -d android
 ```
 
+## Connecting the backend (optional)
+
+The app calls the EchoMind Node proxy (the `eCHOmIND` project) for the safety
+classifier, weekly reflection, and query. Without it, each screen falls back to
+local/mock behaviour.
+
+```sh
+# In the eCHOmIND project:
+cp .env.example .env          # add ANTHROPIC_API_KEY
+npm install && npm start      # serves http://localhost:3000
+```
+
+Point the app at the proxy (defaults: localhost on web/iOS/desktop, 10.0.2.2 on
+the Android emulator):
+
+```sh
+flutter run --dart-define=ECHOMIND_API=http://192.168.1.5:3000   # physical device / custom host
+```
+
 ## What's built
 
 | Area | Screen | Notes |
 |------|--------|-------|
 | Onboarding | `screens/onboarding` | 4-step consent: privacy, AI limits, 18+ age gate — all required before entry |
 | Today (home) | `screens/home` | Greeting, persistent "Not a therapist" banner, recent entries, Help + Settings |
-| New entry | `screens/journal` | Text + (mocked) voice, 5-point mood tag; safety classifier runs **first** on save |
-| Reflect | `screens/reflection` | Weekly AI summary (mock), framed as reflection-not-advice |
+| New entry | `screens/journal` | Text + (mocked) voice, 5-point mood tag; `POST /api/safety/classify` runs **first** on save (local backstop offline) |
+| Reflect | `screens/reflection` | `POST /api/reflection/weekly` → Claude (Sonnet); sample reflection offline |
 | Patterns | `screens/dashboard` | 14-day mood chart (hand-drawn, no chart dep) + recurring themes |
-| Ask | `screens/query` | Conversational query over your own entries (canned answers) |
+| Ask | `screens/query` | `POST /api/query` RAG over your own entries (Haiku); canned answer offline |
 | Crisis help | `screens/crisis` | Reachable from every screen; tap-to-call iCall + Vandrevala |
 | Settings | `screens/settings` | Account, subscription, integrations, DPDP export/delete |
 
@@ -56,8 +76,8 @@ product. The placeholder exists only to demonstrate the L3 → crisis-redirect U
 ## Next steps (toward the SOW MVP)
 
 1. Encrypted local store (SQLite + Keychain/Keystore); replace `MockData`.
-2. Node.js proxy + Claude (Haiku/Sonnet tiered); wire `Ask` and `Reflect` to RAG.
-3. Embedding pipeline + Pinecone; real conversational query flow.
+2. ~~Node.js proxy + Claude (Haiku/Sonnet tiered); wire `Ask` and `Reflect`.~~ ✅ done — see `eCHOmIND`.
+3. Embedding pipeline + Pinecone; real on-device vector match feeding `/api/query` snippets.
 4. Clinical, server-side safety classifier replacing `core/safety.dart`.
 5. Google Calendar / Gmail (labeled) read-only OAuth.
 6. Razorpay subscription; analytics/crash (anonymized).
