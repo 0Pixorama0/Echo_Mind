@@ -1,5 +1,5 @@
 /* EchoMind service worker — offline app shell */
-const CACHE = 'echomind-v1';
+const CACHE = 'echomind-v2';
 const ASSETS = [
   './',
   './index.html',
